@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -100,7 +101,7 @@ class User extends Authenticatable implements MustVerifyEmail
         // Get all groups user is a member of or owns
         $groupIds = $this->groups()->pluck('expense_groups.id')
             ->merge($this->ownedExpenseGroups()->pluck('id'));
-        
+
         // Get all centers in those groups
         return ExpenseCenter::whereIn('group_id', $groupIds);
     }
@@ -135,5 +136,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canLogin(): bool
     {
         return $this->hasVerifiedEmail() && $this->isApproved();
+    }
+
+    /**
+     * Send the email verification notification.
+     * Override to use queued notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
     }
 }

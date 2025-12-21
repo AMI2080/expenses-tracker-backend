@@ -22,36 +22,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('register');
         Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-        // Email Verification Routes (public - user doesn't need to be authenticated to verify via link)
-        Route::get('/email/verify/{id}/{hash}', function (string $id, string $hash) {
-            $user = \App\Models\User::findOrFail($id);
-
-            if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid verification link.',
-                ], 403);
-            }
-
-            if ($user->hasVerifiedEmail()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Email already verified.',
-                ]);
-            }
-
-            if ($user->markEmailAsVerified()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Email verified successfully. Please wait for admin approval.',
-                ]);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to verify email.',
-            ], 500);
-        })->name('verification.verify');
+        Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
     });
 
     // ============================================================================

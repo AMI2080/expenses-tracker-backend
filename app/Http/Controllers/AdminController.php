@@ -13,15 +13,24 @@ class AdminController extends Controller
      */
     public function pendingUsers(Request $request): JsonResponse
     {
+        $perPage = $request->integer('per_page', 15);
+        $perPage = min(max($perPage, 1), 100);
+
         $pendingUsers = User::whereNotNull('email_verified_at')
             ->where('is_approved', false)
             ->select('id', 'name', 'email', 'email_verified_at', 'created_at')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data' => $pendingUsers,
+            'data' => $pendingUsers->items(),
+            'pagination' => [
+                'current_page' => $pendingUsers->currentPage(),
+                'last_page' => $pendingUsers->lastPage(),
+                'per_page' => $pendingUsers->perPage(),
+                'total' => $pendingUsers->total(),
+            ],
         ]);
     }
 

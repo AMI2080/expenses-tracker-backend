@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -123,6 +124,43 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Logged out successfully.',
         ]);
+    }
+
+    /**
+     * Verify user email address.
+     */
+    public function verifyEmail(string $id, string $hash): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid verification link.',
+            ], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Email already verified.',
+            ]);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            // Fire the Verified event to trigger admin notifications
+            event(new Verified($user));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully. Please wait for admin approval.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to verify email.',
+        ], 500);
     }
 
     /**
