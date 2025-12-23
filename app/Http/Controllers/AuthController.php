@@ -259,7 +259,6 @@ class AuthController extends Controller
                 'is_approved' => $user->isApproved(),
                 'is_verified_email' => $user->hasVerifiedEmail(),
                 'sessions' => $sessions,
-                'sessions_count' => $sessions->count(),
             ],
         ]);
     }
