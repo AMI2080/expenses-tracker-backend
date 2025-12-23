@@ -182,5 +182,25 @@ class AuthController extends Controller
             'message' => 'Verification email has been sent.',
         ]);
     }
+
+    /**
+     * Get authenticated user details.
+     */
+    public function getUserDetails(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => $user->isAdmin(),
+                'is_approved' => $user->isApproved(),
+                'is_verified_email' => $user->hasVerifiedEmail(),
+            ],
+        ]);
+    }
 }
 

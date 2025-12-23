@@ -6,7 +6,6 @@ use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\ExpenseCenterController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpenseGroupController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
@@ -21,7 +20,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('register');
         Route::post('/login', [AuthController::class, 'login'])->name('login');
-
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
     });
 
@@ -32,9 +30,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // Authentication Routes
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/user', function (Request $request) {
-            return $request->user();
-        });
+        Route::get('/user', [AuthController::class, 'getUserDetails']);
         Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])->name('verification.send');
 
         // ========================================================================
