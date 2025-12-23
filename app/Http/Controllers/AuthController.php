@@ -97,8 +97,9 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-        $currentTokenId = $user->currentAccessToken()->id;
+        $newAccessToken = $user->createToken('auth-token');
+        $token = $newAccessToken->plainTextToken;
+        $currentTokenId = $newAccessToken->accessToken->id;
         $sessions = $this->getUserSessions($user, $currentTokenId);
         $userData = $this->getUserDataArray($user, $sessions);
 
