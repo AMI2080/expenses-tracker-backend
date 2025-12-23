@@ -127,6 +127,24 @@ class AuthController extends Controller
     }
 
     /**
+     * Logout all other sessions except the current one.
+     */
+    public function logoutOtherSessions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentTokenId = $request->user()->currentAccessToken()->id;
+
+        $user->tokens()
+            ->where('id', '!=', $currentTokenId)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All other sessions have been logged out successfully.',
+        ]);
+    }
+
+    /**
      * Verify user email address.
      */
     public function verifyEmail(string $id, string $hash): JsonResponse

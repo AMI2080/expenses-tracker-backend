@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // Authentication Routes
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout-other-sessions', [AuthController::class, 'logoutOtherSessions']);
         Route::get('/user', [AuthController::class, 'getUserDetails']);
         Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])->name('verification.send');
 
