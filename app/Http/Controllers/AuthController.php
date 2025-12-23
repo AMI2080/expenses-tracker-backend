@@ -207,6 +207,23 @@ class AuthController extends Controller
     public function getUserDetails(Request $request): JsonResponse
     {
         $user = $request->user();
+        $currentTokenId = $user->currentAccessToken()->id;
+
+        // Get all valid tokens (sessions) for the user
+        $sessions = $user->tokens()
+            ->select(['id', 'name', 'last_used_at', 'expires_at', 'created_at'])
+            ->orderBy('last_used_at', 'desc')
+            ->get()
+            ->map(function ($token) use ($currentTokenId) {
+                return [
+                    'id' => $token->id,
+                    'name' => $token->name,
+                    'is_current' => $token->id === $currentTokenId,
+                    'last_used_at' => $token->last_used_at?->format('c'),
+                    'expires_at' => $token->expires_at?->format('c'),
+                    'created_at' => $token->created_at->format('c'),
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -217,6 +234,8 @@ class AuthController extends Controller
                 'is_admin' => $user->isAdmin(),
                 'is_approved' => $user->isApproved(),
                 'is_verified_email' => $user->hasVerifiedEmail(),
+                'sessions' => $sessions,
+                'sessions_count' => $sessions->count(),
             ],
         ]);
     }
