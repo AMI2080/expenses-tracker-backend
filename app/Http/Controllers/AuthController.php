@@ -145,6 +145,30 @@ class AuthController extends Controller
     }
 
     /**
+     * Logout a specific session by ID.
+     */
+    public function logoutSession(Request $request, $sessionId): JsonResponse
+    {
+        $user = $request->user();
+
+        $token = $user->tokens()->find($sessionId);
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session not found or does not belong to you.',
+            ], 404);
+        }
+
+        $token->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Session logged out successfully.',
+        ]);
+    }
+
+    /**
      * Verify user email address.
      */
     public function verifyEmail(string $id, string $hash): JsonResponse
