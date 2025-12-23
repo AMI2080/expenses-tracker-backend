@@ -98,16 +98,14 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
+        $currentTokenId = $user->currentAccessToken()->id;
+        $sessions = $this->getUserSessions($user, $currentTokenId);
+        $userData = $this->getUserDataArray($user, $sessions);
 
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_admin' => $user->is_admin,
-                ],
+                'user' => $userData,
                 'token' => $token,
             ],
         ]);
@@ -232,9 +230,25 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $currentTokenId = $user->currentAccessToken()->id;
+        $sessions = $this->getUserSessions($user, $currentTokenId);
+        $userData = $this->getUserDataArray($user, $sessions);
 
-        // Get all valid tokens (sessions) for the user
-        $sessions = $user->tokens()
+        return response()->json([
+            'success' => true,
+            'data' => $userData,
+        ]);
+    }
+
+    /**
+     * Get all sessions (tokens) for a user.
+     *
+     * @param User $user
+     * @param int|null $currentTokenId
+     * @return array
+     */
+    private function getUserSessions(User $user, ?int $currentTokenId = null): array
+    {
+        return $user->tokens()
             ->select(['id', 'name', 'last_used_at', 'expires_at', 'created_at'])
             ->orderBy('last_used_at', 'desc')
             ->get()
@@ -247,20 +261,28 @@ class AuthController extends Controller
                     'expires_at' => $token->expires_at?->format('c'),
                     'created_at' => $token->created_at->format('c'),
                 ];
-            });
+            })
+            ->toArray();
+    }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_admin' => $user->isAdmin(),
-                'is_approved' => $user->isApproved(),
-                'is_verified_email' => $user->hasVerifiedEmail(),
-                'sessions' => $sessions,
-            ],
-        ]);
+    /**
+     * Format user data array with sessions.
+     *
+     * @param User $user
+     * @param array $sessions
+     * @return array
+     */
+    private function getUserDataArray(User $user, array $sessions): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_admin' => $user->isAdmin(),
+            'is_approved' => $user->isApproved(),
+            'is_verified_email' => $user->hasVerifiedEmail(),
+            'sessions' => $sessions,
+        ];
     }
 }
 
